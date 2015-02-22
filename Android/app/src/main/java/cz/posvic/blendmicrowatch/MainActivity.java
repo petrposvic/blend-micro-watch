@@ -14,8 +14,13 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 public class MainActivity extends ActionBarActivity {
 	private static final String TAG = MainActivity.class.getName();
+
+	private SimpleDateFormat sdf = new SimpleDateFormat("HHmmss");
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -51,6 +56,14 @@ public class MainActivity extends ActionBarActivity {
 			@Override
 			public void onClick(View v) {
 				stopService(new Intent(MainActivity.this, EventService.class));
+			}
+		});
+
+		Button butSetClock = (Button) findViewById(R.id.butSetClock);
+		butSetClock.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				sendMessage("&" + sdf.format(new Date()));
 			}
 		});
 	}
