@@ -5,12 +5,17 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattService;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.provider.BaseColumns;
+import android.provider.ContactsContract;
 import android.support.v4.content.LocalBroadcastManager;
 import android.telephony.PhoneStateListener;
 import android.telephony.SmsMessage;
@@ -80,6 +85,29 @@ public class EventService extends Service {
 		intent.putExtra(EventService.BROADCAST_MSG_DATA, "disconnected");
 
 		LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+	}
+
+	private String getContactNameByNumber(String number) {
+		Uri uri = Uri.withAppendedPath(ContactsContract.PhoneLookup.CONTENT_FILTER_URI, Uri.encode(number));
+		String name = number;
+
+		ContentResolver contentResolver = getContentResolver();
+		Cursor contactLookup = contentResolver.query(uri, new String[] {
+				BaseColumns._ID, ContactsContract.PhoneLookup.DISPLAY_NAME
+		}, null, null, null);
+
+		try {
+			if (contactLookup != null && contactLookup.getCount() > 0) {
+				contactLookup.moveToNext();
+				name = contactLookup.getString(contactLookup.getColumnIndex(ContactsContract.Data.DISPLAY_NAME));
+			}
+		} finally {
+			if (contactLookup != null) {
+				contactLookup.close();
+			}
+		}
+
+		return name;
 	}
 
 	// ------------------------------------------------------------------------
@@ -230,11 +258,11 @@ public class EventService extends Service {
 					final Object[] pDusObjArray = (Object[]) bundle.get("pdus");
 					for (Object pDusObj : pDusObjArray) {
 						SmsMessage sms = SmsMessage.createFromPdu((byte[]) pDusObj);
-						String senderNum = sms.getDisplayOriginatingAddress();
+						String number = sms.getDisplayOriginatingAddress();
 						String message = sms.getDisplayMessageBody();
 
-						Log.i(TAG, "senderNum: " + senderNum + "; message: " + message);
-						sendGattMessage("~SMS '" + senderNum + ":" + message + "'");
+						Log.i(TAG, "senderNum: " + number + "; message: " + message);
+						sendGattMessage("~SMS '" + getContactNameByNumber(number) + ":" + message + "'");
 					}
 				} catch (Exception e) {
 					Log.e(TAG, e.toString());
@@ -265,7 +293,7 @@ public class EventService extends Service {
 
 							case TelephonyManager.CALL_STATE_RINGING:
 								Log.d(TAG, "RINGING");
-								sendGattMessage("~CALL '" + incomingNumber + "'");
+								sendGattMessage("~CALL '" + getContactNameByNumber(incomingNumber) + "'");
 								break;
 						}
 					}

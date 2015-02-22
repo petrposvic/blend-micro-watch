@@ -70,6 +70,8 @@ public class MainActivity extends ActionBarActivity {
 				sendMessage("&" + sdf.format(new Date()));
 			}
 		});
+
+		connect();
 	}
 
 	@Override
