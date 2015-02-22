@@ -28,7 +28,11 @@ void setup() {
 
   display.clearDisplay();
   display.setCursor(0, 0);
-  display.print("Hello!");
+  display.println("--------------------- ");
+  display.println("| Blend Micro Watch | ");
+  display.println("--------------------- ");
+  display.println();
+  display.println("       Welcome        ");
   display.display();
 
   pinMode(DISPLAY, OUTPUT);
