@@ -12,6 +12,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.text.SimpleDateFormat;
@@ -21,11 +22,14 @@ public class MainActivity extends ActionBarActivity {
 	private static final String TAG = MainActivity.class.getName();
 
 	private SimpleDateFormat sdf = new SimpleDateFormat("HHmmss");
+	private TextView tvState;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
+
+		tvState = (TextView) findViewById(R.id.tvState);
 
 		Button butDebugCall = (Button) findViewById(R.id.butDebugCall);
 		butDebugCall.setOnClickListener(new View.OnClickListener() {
@@ -47,7 +51,7 @@ public class MainActivity extends ActionBarActivity {
 		butDebugServiceStart.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				startService(new Intent(MainActivity.this, EventService.class));
+				connect();
 			}
 		});
 
@@ -55,7 +59,7 @@ public class MainActivity extends ActionBarActivity {
 		butDebugServiceStop.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				stopService(new Intent(MainActivity.this, EventService.class));
+				disconnect();
 			}
 		});
 
@@ -97,6 +101,14 @@ public class MainActivity extends ActionBarActivity {
 		return super.onOptionsItemSelected(item);
 	}
 
+	private void connect() {
+		startService(new Intent(MainActivity.this, EventService.class));
+	}
+
+	private void disconnect() {
+		stopService(new Intent(MainActivity.this, EventService.class));
+	}
+
 	/**
 	 * Send message to service.
 	 * @param msg
@@ -118,7 +130,23 @@ public class MainActivity extends ActionBarActivity {
 		public void onReceive(Context context, Intent intent) {
 			String msg = intent.getStringExtra(EventService.BROADCAST_MSG_DATA);
 			Log.d(TAG, "got message: " + msg);
-			Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
+
+			if ("discovered".equals(msg)) {
+				tvState.setText("Connected");
+				Toast.makeText(context, "Connected", Toast.LENGTH_SHORT).show();
+			} else
+
+			if ("disconnected".equals(msg)) {
+				tvState.setText("Disconnected");
+				Toast.makeText(context, "Disconnected", Toast.LENGTH_SHORT).show();
+
+				// Re-connect
+				connect();
+			} else
+
+			{
+				Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
+			}
 		}
 	};
 }

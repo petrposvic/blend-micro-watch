@@ -10,6 +10,13 @@
 	android:orientation="vertical"
 	tools:context=".MainActivity">
 
+	<TextView
+		android:id="@+id/tvState"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:gravity="right"
+		android:text="State" />
+
 	<LinearLayout
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
