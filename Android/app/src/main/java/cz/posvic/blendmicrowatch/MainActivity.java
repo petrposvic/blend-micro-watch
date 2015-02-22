@@ -35,7 +35,7 @@ public class MainActivity extends ActionBarActivity {
 		butDebugCall.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				sendMessage("CALL 'Mamka'~");
+				sendMessage("~CALL 'Mamka'");
 			}
 		});
 
@@ -43,7 +43,7 @@ public class MainActivity extends ActionBarActivity {
 		butDebugSms.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				sendMessage("SMS 'Ahoj,promin,ale tenhle vikend napracovavam,co jsem zameskal o nemoci.Ale jestli chces,tak pojedu vecer do mesta,tak se muzes pridat.'~");
+				sendMessage("~SMS 'Ahoj,promin,ale tenhle vikend napracovavam,co jsem zameskal o nemoci.Ale jestli chces,tak pojedu vecer do mesta,tak se muzes pridat.'");
 			}
 		});
 

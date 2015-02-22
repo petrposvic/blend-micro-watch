@@ -234,7 +234,7 @@ public class EventService extends Service {
 						String message = sms.getDisplayMessageBody();
 
 						Log.i(TAG, "senderNum: " + senderNum + "; message: " + message);
-						sendGattMessage("SMS '" + senderNum + ":" + message + "'~");
+						sendGattMessage("~SMS '" + senderNum + ":" + message + "'");
 					}
 				} catch (Exception e) {
 					Log.e(TAG, e.toString());
@@ -265,7 +265,7 @@ public class EventService extends Service {
 
 							case TelephonyManager.CALL_STATE_RINGING:
 								Log.d(TAG, "RINGING");
-								sendGattMessage("CALL '" + incomingNumber + "'~");
+								sendGattMessage("~CALL '" + incomingNumber + "'");
 								break;
 						}
 					}

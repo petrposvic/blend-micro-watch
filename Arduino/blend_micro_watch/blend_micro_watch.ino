@@ -57,11 +57,8 @@ boolean new_msg = true;
 boolean ble_state = false;
 
 void loop() {
-  clock.proceed();
 
   if (timer < millis()) {
-    show_clock();
-
     if (new_msg) {
       new_msg = false;
 
@@ -71,6 +68,9 @@ void loop() {
 #endif
 
     }
+
+    clock.proceed();
+    show_clock();
   }
 
   if (ble_available()) {
@@ -87,7 +87,6 @@ void loop() {
 #endif
 
         vibrate();
-        timer = millis() + 1000 * 5;
         new_msg = true;
       } else
 
@@ -125,6 +124,9 @@ void loop() {
 
       {
         Serial.write(ch);
+
+        // Each char prolong display timer
+        timer = millis() + 1000 * 5;
 
         display.print(ch);
         display.display();
