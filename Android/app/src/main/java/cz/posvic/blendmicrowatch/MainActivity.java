@@ -47,6 +47,14 @@ public class MainActivity extends ActionBarActivity {
 			}
 		});
 
+		Button butDebugEmail = (Button) findViewById(R.id.butDebugEmail);
+		butDebugEmail.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				sendMessage("~EMAIL 'petr@posvic.cz" + ":" + "Re: Test e-mail" + ":" + "Toto je testovací e-mail s háčky a čárkami. Příliš žluťoučký kůň pěl úžasné ódy.\n\nJak se daří?\n\nS pozdravem,\nPřítel'");
+			}
+		});
+
 		Button butDebugServiceStart = (Button) findViewById(R.id.butDebugServiceStart);
 		butDebugServiceStart.setOnClickListener(new View.OnClickListener() {
 			@Override

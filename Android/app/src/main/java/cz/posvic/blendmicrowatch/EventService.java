@@ -22,6 +22,7 @@ import android.telephony.SmsMessage;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 
+import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -138,7 +139,7 @@ public class EventService extends Service {
 	}
 
 	private void sendGattMessage(String msg) {
-		StringBuilder sb = new StringBuilder(msg);
+		StringBuilder sb = new StringBuilder(sanitize2(msg));
 		while (sb.length() > 0) {
 
 			// Send 16 bytes chunk or rest of the message
@@ -150,7 +151,93 @@ public class EventService extends Service {
 			characteristic.setValue(str.getBytes());
 
 			mBluetoothLeService.writeCharacteristic(characteristic);
+
+			try {
+				Thread.sleep(500);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 		}
+	}
+
+	/**
+	 * Replace special characters to standard ASCII.
+	 * @param msg Message
+	 * @return String in ASCII
+	 */
+	private String sanitize(String msg) {
+		try {
+			byte[] bytes = msg.getBytes("US-ASCII");
+			String ret = new String(bytes);
+			Log.d(TAG, "sanitized text: " + ret);
+			return ret;
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+		}
+
+		return "?";
+	}
+
+	private String sanitize2(String msg) {
+		final Map<Character, Character> map = new HashMap<>();
+
+		// Special
+		map.put('~', '~');
+		map.put('@', '@');
+
+		// Sentences
+		map.put('.', '.');
+		map.put(',', ',');
+		map.put(' ', ' ');
+		map.put('!', '!');
+		map.put('?', '?');
+		map.put(':', ':');
+		map.put('-', '-');
+		map.put('"', '"');
+
+		// Czech
+		map.put('á', 'a');
+		map.put('č', 'c');
+		map.put('ď', 'd');
+		map.put('ě', 'e');
+		map.put('é', 'e');
+		map.put('í', 'i');
+		map.put('ň', 'n');
+		map.put('ó', 'o');
+		map.put('ř', 'r');
+		map.put('š', 's');
+		map.put('ť', 't');
+		map.put('ů', 'u');
+		map.put('ú', 'u');
+		map.put('ý', 'y');
+		map.put('ž', 'z');
+
+		// Escaped
+		map.put('\'', '"');
+		map.put('\n', ' ');
+
+		StringBuilder sb = new StringBuilder(msg.length());
+		for (int i = 0; i < msg.length(); i++) {
+			char ch = msg.charAt(i);
+
+			// Big and small letters are OK
+			if (
+					(ch >= 65 && ch <= 90) ||
+					(ch >= 97 && ch <= 122)
+			) {
+				sb.append(ch);
+				continue;
+			}
+
+			Character character = map.get(ch);
+			if (character != null) {
+				sb.append(character);
+			} else {
+				sb.append('?');
+			}
+		}
+
+		return sb.toString();
 	}
 
 	// ------------------------------------------------------------------------

@@ -27,14 +27,35 @@
 			android:layout_width="0dp"
 			android:layout_height="wrap_content"
 			android:layout_weight="0.5"
-			android:text="Debug call " />
+			android:text="Debug call" />
 
 		<Button
 			android:id="@+id/butDebugSms"
 			android:layout_width="0dp"
 			android:layout_height="wrap_content"
 			android:layout_weight="0.5"
-			android:text="Debug SMS " />
+			android:text="Debug SMS" />
+
+	</LinearLayout>
+
+	<LinearLayout
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:orientation="horizontal">
+
+		<Button
+			android:id="@+id/butDebugEmail"
+			android:layout_width="0dp"
+			android:layout_height="wrap_content"
+			android:layout_weight="0.5"
+			android:text="Debug e-mail" />
+
+		<Button
+			android:id="@+id/butSetClock"
+			android:layout_width="0dp"
+			android:layout_height="wrap_content"
+			android:layout_weight="0.5"
+			android:text="Set clock" />
 
 	</LinearLayout>
 
@@ -48,21 +69,15 @@
 			android:layout_width="0dp"
 			android:layout_height="wrap_content"
 			android:layout_weight="0.5"
-			android:text="Start service " />
+			android:text="Start service" />
 
 		<Button
 			android:id="@+id/butDebugServiceStop"
 			android:layout_width="0dp"
 			android:layout_height="wrap_content"
 			android:layout_weight="0.5"
-			android:text="Stop service " />
+			android:text="Stop service" />
 
 	</LinearLayout>
-
-	<Button
-		android:id="@+id/butSetClock"
-		android:layout_width="match_parent"
-		android:layout_height="wrap_content"
-		android:text="Set clock " />
 
 </LinearLayout>
