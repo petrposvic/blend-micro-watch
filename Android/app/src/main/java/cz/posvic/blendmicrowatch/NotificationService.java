@@ -1,6 +1,7 @@
 package cz.posvic.blendmicrowatch;
 
 import android.content.Intent;
+import android.os.Bundle;
 import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
 import android.support.v4.content.LocalBroadcastManager;
@@ -13,10 +14,11 @@ public class NotificationService extends NotificationListenerService {
 	public void onNotificationPosted(StatusBarNotification sbn) {
 		Log.d(TAG, "-- onNotificationPosted(" + sbn + ") --");
 
-		// TODO Send author, subject and head of the message
 		if ("com.google.android.gm".equals(sbn.getPackageName())) {
+			Bundle bundle = sbn.getNotification().extras;
+
 			Intent intent = new Intent(EventService.BROADCAST_MSG_SEND);
-			intent.putExtra(EventService.BROADCAST_MSG_DATA, "~EMAIL");
+			intent.putExtra(EventService.BROADCAST_MSG_DATA, "~EMAIL '" + bundle.getString("android.title") + " " + bundle.getCharSequence("android.bigText") + "'");
 
 			LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
 		}

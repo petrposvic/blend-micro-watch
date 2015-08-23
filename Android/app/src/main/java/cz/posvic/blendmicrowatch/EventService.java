@@ -65,7 +65,7 @@ public class EventService extends Service {
 
 		LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, new IntentFilter(BROADCAST_MSG_SEND));
 
-		return super.onStartCommand(intent, flags, startId);
+		return START_STICKY;
 	}
 
 	@Override
