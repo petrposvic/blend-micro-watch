@@ -16,17 +16,20 @@
 // #define GYRO
 
 // Use baro BMP180
-#define BARO
+// #define BARO
 
-#define DISPLAY    5
+#define DISPLAY    10
 #define VIBRATOR   8
+/*
 #define OLED_DC    9
 #define OLED_CS    10
 #define OLED_CLK   11
 #define OLED_MOSI  12
 #define OLED_RESET 13
+*/
+#define OLED_RESET 4
 
-Adafruit_SSD1306 display(OLED_MOSI, OLED_CLK, OLED_DC, OLED_RESET, OLED_CS);
+Adafruit_SSD1306 display(OLED_RESET);
 Clock clock;
 
 #ifdef GYRO
@@ -71,7 +74,7 @@ void setup() {
   digitalWrite(DISPLAY, HIGH);
 
   pinMode(VIBRATOR, OUTPUT);
-  digitalWrite(VIBRATOR, HIGH); // Pullup
+  digitalWrite(VIBRATOR, LOW); // Pullup
 
 #ifdef GYRO
   accelgyro.initialize();
@@ -306,9 +309,9 @@ void show_clock() {
 }
 
 void vibrate() {
-  digitalWrite(VIBRATOR, LOW);
-  delay(1000);
   digitalWrite(VIBRATOR, HIGH);
+  delay(1000);
+  digitalWrite(VIBRATOR, LOW);
 }
 
 long read_vcc() {
