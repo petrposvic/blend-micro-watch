@@ -18,7 +18,6 @@
 // Use baro BMP180
 // #define BARO
 
-#define DISPLAY    10
 #define VIBRATOR   8
 /*
 #define OLED_DC    9
@@ -168,6 +167,13 @@ void loop() {
 
         vibrate();
         new_msg = true;
+
+        // Move clock on top
+        display.clearDisplay();
+        display.setCursor(0, 0);
+        display.setTextSize(1);
+        display.print("       ");
+        show_clock2();
       } else
 
       // Set clock
@@ -265,6 +271,7 @@ void show_clock() {
 
   // Show connection and voltage
   display.setCursor(0, 57);
+  display.setTextSize(1);
   if (!ble_state) {
     display.print("(!) ");
   }
@@ -295,7 +302,14 @@ void show_clock() {
 
   // Show clock
   display.setCursor(0, 0);
-  display.print("       ");
+  display.setTextSize(2);
+  display.println();
+  display.println();
+  display.print(" ");
+  show_clock2();
+}
+
+void show_clock2() {
   if (clock.h < 10) display.print("0");
   display.print(clock.h);
   display.print(":");
