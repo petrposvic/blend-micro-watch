@@ -34,6 +34,7 @@ public class EventService extends Service {
 	public static final String BROADCAST_MSG_RECEIVE = "event-msg-receive";
 	public static final String BROADCAST_MSG_DATA = "event-msg-data";
 
+	private boolean mRunning;
 	private RBLService mBluetoothLeService;
 	private Map<UUID, BluetoothGattCharacteristic> map = new HashMap<>();
 
@@ -46,6 +47,13 @@ public class EventService extends Service {
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
 		Log.d(TAG, "-- onStartCommand(...," + flags + "," + startId + ") --");
+
+		if (mRunning) {
+			Log.i(TAG, "service already run");
+			return START_NOT_STICKY;
+		}
+
+		mRunning = true;
 
 		Intent gattServiceIntent = new Intent(this, RBLService.class);
 		bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
@@ -64,6 +72,7 @@ public class EventService extends Service {
 		super.onDestroy();
 		Log.d(TAG, "-- onDestroy() --");
 
+		gattDisconnected(false);
 		unbindService(mServiceConnection);
 
 		unregisterReceiver(mGattUpdateReceiver);
@@ -71,6 +80,8 @@ public class EventService extends Service {
 		unregisterReceiver(mCallReceiver);
 
 		LocalBroadcastManager.getInstance(this).unregisterReceiver(mMessageReceiver);
+
+		mRunning = false;
 	}
 
 	private void gattDiscovered() {
@@ -80,9 +91,10 @@ public class EventService extends Service {
 		LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
 	}
 
-	private void gattDisconnected() {
+	private void gattDisconnected(boolean reconnect) {
 		Intent intent = new Intent(BROADCAST_MSG_RECEIVE);
 		intent.putExtra(EventService.BROADCAST_MSG_DATA, "disconnected");
+		intent.putExtra("reconnect", reconnect);
 
 		LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
 	}
@@ -210,7 +222,7 @@ public class EventService extends Service {
 			switch (action) {
 				case RBLService.ACTION_GATT_DISCONNECTED:
 					Log.i(TAG, "gatt disconnected");
-					gattDisconnected();
+					gattDisconnected(true);
 					stopSelf();
 					break;
 

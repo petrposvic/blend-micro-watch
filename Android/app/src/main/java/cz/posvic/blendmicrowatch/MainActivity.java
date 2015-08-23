@@ -143,7 +143,9 @@ public class MainActivity extends ActionBarActivity {
 				Toast.makeText(context, "Disconnected", Toast.LENGTH_SHORT).show();
 
 				// Re-connect
-				connect();
+				if (intent.getBooleanExtra("reconnect", true)) {
+					connect();
+				}
 			} else
 
 			{
