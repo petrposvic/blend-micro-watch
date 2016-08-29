@@ -17,7 +17,7 @@
 		android:theme="@style/AppTheme">
 
 		<activity
-			android:name=".MainActivity"
+			android:name=".activity.MainActivity"
 			android:label="@string/app_name"
 			android:screenOrientation="portrait">
 
@@ -28,15 +28,15 @@
 
 		</activity>
 
-		<service android:name=".EventService" android:enabled="true" />
-		<service android:name=".RBLService" android:enabled="true" />
+		<service android:name=".service.EventService" android:enabled="true" />
+		<service android:name=".service.RBLService" android:enabled="true" />
 
 		<!--
 		Settings -> Notification Manager -> Notification Access
 		Check BlendMicroWatch
 		-->
 		<service
-			android:name=".NotificationService"
+			android:name=".service.NotificationService"
 			android:label="@string/app_name"
 			android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
 			<intent-filter>

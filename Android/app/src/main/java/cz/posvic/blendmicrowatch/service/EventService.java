@@ -1,4 +1,4 @@
-package cz.posvic.blendmicrowatch;
+package cz.posvic.blendmicrowatch.service;
 
 import android.app.Service;
 import android.bluetooth.BluetoothGattCharacteristic;
@@ -22,20 +22,21 @@ import android.telephony.SmsMessage;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 
-import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-public class EventService extends Service {
+public class EventService extends Service implements Runnable {
 
 	private static final String TAG = EventService.class.getName();
 
 	public static final String BROADCAST_MSG_SEND = "event-msg-send";
 	public static final String BROADCAST_MSG_RECEIVE = "event-msg-receive";
 	public static final String BROADCAST_MSG_DATA = "event-msg-data";
+	public static final String BROADCAST_MSG_RECONNECT = "event-msg-reconnect";
+	public static final String BROADCAST_MSG_WATCHDOG = "event-msg-watchdog";
 
-	private boolean mRunning;
+	private boolean mRunning, mConnected;
 	private RBLService mBluetoothLeService;
 	private Map<UUID, BluetoothGattCharacteristic> map = new HashMap<>();
 
@@ -51,19 +52,21 @@ public class EventService extends Service {
 
 		if (mRunning) {
 			Log.i(TAG, "service already run");
-			return START_NOT_STICKY;
+			return START_STICKY;
 		}
 
 		mRunning = true;
+		new Thread(this).start();
 
-		Intent gattServiceIntent = new Intent(this, RBLService.class);
-		bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
+		// Intent gattServiceIntent = new Intent(this, RBLService.class);
+		// bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
 
 		registerReceiver(mGattUpdateReceiver, makeGattUpdateIntentFilter());
 		registerReceiver(mSmsReceiver, makeSmsIntentFilter());
 		registerReceiver(mCallReceiver, makeCallIntentFilter());
 
 		LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, new IntentFilter(BROADCAST_MSG_SEND));
+		LocalBroadcastManager.getInstance(this).registerReceiver(mWatchdogReceiver, new IntentFilter(BROADCAST_MSG_WATCHDOG));
 
 		return START_STICKY;
 	}
@@ -81,8 +84,28 @@ public class EventService extends Service {
 		unregisterReceiver(mCallReceiver);
 
 		LocalBroadcastManager.getInstance(this).unregisterReceiver(mMessageReceiver);
+		LocalBroadcastManager.getInstance(this).unregisterReceiver(mWatchdogReceiver);
 
 		mRunning = false;
+	}
+
+	@Override
+	public void run() {
+		while (mRunning) {
+			try {
+				Thread.sleep(5000);
+			} catch (InterruptedException ignored) {}
+
+			Log.d(TAG, "connected = " + mConnected);
+
+			// Try rebind connection service
+			if (!mConnected) {
+				Intent intent = new Intent(BROADCAST_MSG_WATCHDOG);
+				LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+			}
+		}
+
+		Log.d(TAG, "watchdog stops");
 	}
 
 	private void gattDiscovered() {
@@ -95,7 +118,7 @@ public class EventService extends Service {
 	private void gattDisconnected(boolean reconnect) {
 		Intent intent = new Intent(BROADCAST_MSG_RECEIVE);
 		intent.putExtra(EventService.BROADCAST_MSG_DATA, "disconnected");
-		intent.putExtra("reconnect", reconnect);
+		intent.putExtra(EventService.BROADCAST_MSG_RECONNECT, reconnect);
 
 		LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
 	}
@@ -139,7 +162,24 @@ public class EventService extends Service {
 	}
 
 	private void sendGattMessage(String msg) {
-		StringBuilder sb = new StringBuilder(sanitize2(msg));
+		String toSend = sanitize(msg);
+
+		// Prevent long messages
+		int count = 0;
+		for (int i = 0; i < toSend.length(); i++) {
+			char ch = toSend.charAt(i);
+			if (ch == '~' || ch == '&' || ch == '^') {
+				continue;
+			}
+
+			count++;
+		}
+		if (count > 148) {
+			toSend = toSend.substring(0, 148);
+			Log.d(TAG, "to send = " + toSend);
+		}
+
+		StringBuilder sb = new StringBuilder(toSend);
 		while (sb.length() > 0) {
 
 			// Send 16 bytes chunk or rest of the message
@@ -160,30 +200,13 @@ public class EventService extends Service {
 		}
 	}
 
-	/**
-	 * Replace special characters to standard ASCII.
-	 * @param msg Message
-	 * @return String in ASCII
-	 */
 	private String sanitize(String msg) {
-		try {
-			byte[] bytes = msg.getBytes("US-ASCII");
-			String ret = new String(bytes);
-			Log.d(TAG, "sanitized text: " + ret);
-			return ret;
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-		}
-
-		return "?";
-	}
-
-	private String sanitize2(String msg) {
 		final Map<Character, Character> map = new HashMap<>();
 
-		// Special
+		// Commands
 		map.put('~', '~');
-		map.put('@', '@');
+		map.put('&', '&');
+		map.put('^', '^');
 
 		// Sentences
 		map.put('.', '.');
@@ -194,6 +217,7 @@ public class EventService extends Service {
 		map.put(':', ':');
 		map.put('-', '-');
 		map.put('"', '"');
+		map.put('@', '@');
 
 		// Czech
 		map.put('á', 'a');
@@ -216,14 +240,18 @@ public class EventService extends Service {
 		map.put('\'', '"');
 		map.put('\n', ' ');
 
+		// Command char is possible to use just once
+		boolean command = false;
+
 		StringBuilder sb = new StringBuilder(msg.length());
 		for (int i = 0; i < msg.length(); i++) {
 			char ch = msg.charAt(i);
 
-			// Big and small letters are OK
+			// Some groups of chars are OK
 			if (
-					(ch >= 65 && ch <= 90) ||
-					(ch >= 97 && ch <= 122)
+					(ch >= 48 && ch <= 57) ||   // Numbers
+					(ch >= 65 && ch <= 90) ||   // Big letters
+					(ch >= 97 && ch <= 122)     // Small letters
 			) {
 				sb.append(ch);
 				continue;
@@ -231,6 +259,17 @@ public class EventService extends Service {
 
 			Character character = map.get(ch);
 			if (character != null) {
+				if (
+						character == '~' ||
+						character == '&' ||
+						character == '^'
+				) {
+					if (command) {
+						continue;
+					}
+					command = true;
+				}
+
 				sb.append(character);
 			} else {
 				sb.append('?');
@@ -287,7 +326,10 @@ public class EventService extends Service {
 
 			// Automatically connects to the device upon successful start-up
 			// initialization.
-			mBluetoothLeService.connect("F1:9C:4B:4A:63:21");
+			mBluetoothLeService.connect(
+					// "F1:9C:4B:4A:63:21" // Prototype board
+					"FA:35:8C:ED:4D:12" // Testing board
+			);
 		}
 
 		@Override
@@ -310,13 +352,14 @@ public class EventService extends Service {
 				case RBLService.ACTION_GATT_DISCONNECTED:
 					Log.i(TAG, "gatt disconnected");
 					gattDisconnected(true);
-					stopSelf();
+					mConnected = false;
 					break;
 
 				case RBLService.ACTION_GATT_SERVICES_DISCOVERED:
 					Log.i(TAG, "gatt services discovered");
 					getGattService(mBluetoothLeService.getSupportedGattService());
 					gattDiscovered();
+					mConnected = true;
 					break;
 
 				case RBLService.ACTION_DATA_AVAILABLE:
@@ -410,6 +453,20 @@ public class EventService extends Service {
 			if (msg != null) {
 				sendGattMessage(msg);
 			}
+		}
+	};
+
+	private final BroadcastReceiver mWatchdogReceiver = new BroadcastReceiver() {
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			try {
+				unbindService(mServiceConnection);
+			} catch (IllegalArgumentException e) {
+				e.printStackTrace();
+			}
+
+			Intent gattServiceIntent = new Intent(EventService.this, RBLService.class);
+			bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
 		}
 	};
 }

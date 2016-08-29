@@ -1,10 +1,9 @@
-#include "Arduino.h"
-#include "Clock.h"
+#include "MyClock.h"
 
-Clock::Clock() {
+MyClock::MyClock() {
 }
 
-void Clock::proceed() {
+void MyClock::proceed() {
   double now = millis();
   double diff = now - jobTime;
   if (diff < 1000) {
@@ -38,7 +37,7 @@ void Clock::proceed() {
   jobTime = millis();
 }
 
-void Clock::set(int hours, int minutes, int seconds) {
+void MyClock::set(int hours, int minutes, int seconds) {
   h = hours;
   m = minutes;
   s = seconds;

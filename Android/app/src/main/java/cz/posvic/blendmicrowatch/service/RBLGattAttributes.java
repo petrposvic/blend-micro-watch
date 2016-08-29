@@ -1,4 +1,4 @@
-package cz.posvic.blendmicrowatch;
+package cz.posvic.blendmicrowatch.service;
 
 import java.util.HashMap;
 

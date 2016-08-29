@@ -1,11 +1,11 @@
-#ifndef Clock_h
-#define Clock_h
+#ifndef MyClock_h
+#define MyClock_h
 
 #include "Arduino.h"
 
-class Clock {
+class MyClock {
   public:
-    Clock();
+    MyClock();
     void proceed();
     void set(int hours, int minutes, int seconds);
     int h, m, s;

@@ -1,12 +1,12 @@
-package cz.posvic.blendmicrowatch;
+package cz.posvic.blendmicrowatch.activity;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.ActionBarActivity;
-import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -17,6 +17,9 @@ import android.widget.Toast;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+
+import cz.posvic.blendmicrowatch.service.EventService;
+import cz.posvic.blendmicrowatch.R;
 
 public class MainActivity extends ActionBarActivity {
 	private static final String TAG = MainActivity.class.getName();
@@ -43,7 +46,7 @@ public class MainActivity extends ActionBarActivity {
 		butDebugSms.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				sendMessage("~SMS 'Ahoj,promin,ale tenhle vikend napracovavam,co jsem zameskal o nemoci.Ale jestli chces,tak pojedu vecer do mesta,tak se muzes pridat.'");
+				sendMessage("~SMS 'Ahoj,promin,ale tenhle vikend napracovavam,co jsem zameskal o nemoci.Ale jestli chces,tak pojedu vecer do mesta,tak se muzes pridat.Pokud by ti to nevyslo,tak muzeme vymyslet neco jineho na jiny den.'");
 			}
 		});
 
@@ -52,6 +55,14 @@ public class MainActivity extends ActionBarActivity {
 			@Override
 			public void onClick(View v) {
 				sendMessage("~EMAIL 'petr@posvic.cz" + ":" + "Re: Test e-mail" + ":" + "Toto je testovací e-mail s háčky a čárkami. Příliš žluťoučký kůň pěl úžasné ódy.\n\nJak se daří?\n\nS pozdravem,\nPřítel'");
+			}
+		});
+
+		Button butDebugRead = (Button) findViewById(R.id.butDebugRead);
+		butDebugRead.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				sendMessage("^");
 			}
 		});
 
@@ -151,7 +162,7 @@ public class MainActivity extends ActionBarActivity {
 				Toast.makeText(context, "Disconnected", Toast.LENGTH_SHORT).show();
 
 				// Re-connect
-				if (intent.getBooleanExtra("reconnect", true)) {
+				if (intent.getBooleanExtra(EventService.BROADCAST_MSG_RECONNECT, true)) {
 					connect();
 				}
 			} else

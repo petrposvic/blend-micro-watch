@@ -1,4 +1,4 @@
-package cz.posvic.blendmicrowatch;
+package cz.posvic.blendmicrowatch.service;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -16,9 +16,10 @@ public class NotificationService extends NotificationListenerService {
 
 		if ("com.google.android.gm".equals(sbn.getPackageName())) {
 			Bundle bundle = sbn.getNotification().extras;
+			String msg = bundle.getString("android.title") + " " + bundle.getCharSequence("android.bigText");
 
 			Intent intent = new Intent(EventService.BROADCAST_MSG_SEND);
-			intent.putExtra(EventService.BROADCAST_MSG_DATA, "~EMAIL '" + bundle.getString("android.title") + " " + bundle.getCharSequence("android.bigText") + "'");
+			intent.putExtra(EventService.BROADCAST_MSG_DATA, "~EMAIL '" + msg + "'");
 
 			LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
 		}
